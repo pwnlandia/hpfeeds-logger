@@ -5,6 +5,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 import processors
+import splunk
+import arcsight
 
 PROCESSORS = {
     'amun.events': [processors.amun_events],
@@ -19,6 +21,11 @@ PROCESSORS = {
     'shockpot.events': [processors.shockpot_event,],
     'p0f.events': [processors.p0f_events,],
     'suricata.events': [processors.suricata_events,],
+}
+
+FORMATTERS = {
+    'splunk': splunk.format,
+    'arcsight': arcsight.format,
 }
 
 handler = logging.StreamHandler()
@@ -42,6 +49,11 @@ def main():
     ident       = config['ident'].encode('utf-8')
     secret      = config['secret'].encode('utf-8')
     logfile     = config['log_file']
+
+    formatter = FORMATTERS.get(config['formatter_name'])
+    if not formatter:
+        logger.error('Unsupported data log formatter encountered: %s. Exiting.', config['formatter_name'])
+        return 1    
 
     handler = RotatingFileHandler(logfile, maxBytes=100*1024*1024, backupCount=3)
     handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
@@ -70,8 +82,7 @@ def main():
                 continue
 
             if message: 
-                # TODO: log message to CIM format
-                data_logger.info(message)
+                data_logger.info(formatter(message))
 
     def on_error(payload):
         logger.error('Error message from server: %s', payload)
