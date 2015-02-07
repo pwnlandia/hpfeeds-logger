@@ -1,6 +1,5 @@
 import json
 import hpfeeds
-import traceback
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
@@ -23,35 +22,37 @@ PROCESSORS = {
 }
 
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S.%f'))
 logger = logging.getLogger('logger')
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
 
 def main():
     if len(sys.argv) < 2:
-        logger.error("No config file found. Exiting")
+        logger.error('No config file found. Exiting')
         return 1
 
-    logger.info("Parsing config file: %s", sys.argv[1])
+    logger.info('Parsing config file: %s', sys.argv[1])
 
     config = json.load(file(sys.argv[1]))
-    host        = config["host"]
-    port        = config["port"]
+    host        = config['host']
+    port        = config['port']
     # hpfeeds protocol has trouble with unicode, hence the utf-8 encoding here
-    channels    = [c.encode("utf-8") for c in config["channels"]]
-    ident       = config["ident"].encode("utf-8")
-    secret      = config["secret"].encode("utf-8")
+    channels    = [c.encode('utf-8') for c in config['channels']]
+    ident       = config['ident'].encode('utf-8')
+    secret      = config['secret'].encode('utf-8')
     logfile     = config['log_file']
 
     handler = RotatingFileHandler(logfile, maxBytes=100*1024*1024, backupCount=3)
-    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s', '%Y-%m-%d %H:%M:%S.%f'))
     data_logger = logging.getLogger('data')
     data_logger.setLevel(logging.INFO)
-    data_logger.addHandler(handler)    
+    data_logger.addHandler(handler)
+
+    logger.info('Writing events to %s', logfile)
 
     try:
-        hpc = hpfeeds.new(host, port, ident, SECRET)
+        hpc = hpfeeds.new(host, port, ident, secret)
     except hpfeeds.FeedException, e:
         logger.error('feed exception', e)
         return 1
@@ -64,7 +65,7 @@ def main():
             try:
                 message = processor(identifier, payload)
             except Exception, e:
-                logger.error("invalid message %s", payload)
+                logger.error('invalid message %s', payload)
                 logger.exception(e)
                 continue
 

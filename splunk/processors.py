@@ -1,7 +1,6 @@
 
 import json
 import traceback
-import datetime
 import urlparse
 import socket
 
@@ -11,17 +10,17 @@ class ezdict(object):
     def __getattr__(self, name):
         return self.d.get(name, None)
 
-def create_message(event_type, identifier, src_ip, dst_ip, src_port=None, dst_port=None, transport='tcp', protocol='ip'):
+def create_message(event_type, identifier, src_ip, dst_ip, src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None):
     message = {
         'type':   event_type, 
         'sensor': identifier, 
-        'time':   datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
         'src_ip': src_ip,
         'dst_ip': dst_ip,
         'src_port': src_port,
         'dst_port': dst_port,
         'transport': transport,
         'protocol': protocol,
+        'vendor_product': vendor_product
     }
     return message
 
@@ -43,7 +42,8 @@ def glastopf_event(identifier, payload):
         src_ip=dec.source[0], 
         src_port=dec.source[1], 
         dst_ip=None,
-        dst_port=80
+        dst_port=80,
+        vendor_product='glastopf'
         )
 
 def dionaea_capture(identifier, payload):
@@ -59,7 +59,8 @@ def dionaea_capture(identifier, payload):
         src_ip=dec.saddr, 
         dst_ip=dec.daddr,
         src_port=dec.sport, 
-        dst_port=dec.dport
+        dst_port=dec.dport,
+        vendor_product='dionaea'
         # TODO: pull out md5 and sha512 and do something with it
     )
 
@@ -76,7 +77,8 @@ def dionaea_connections(identifier, payload):
         src_ip=dec.remote_host, 
         dst_ip=dec.local_host,
         src_port=dec.sport, 
-        dst_port=dec.dport
+        dst_port=dec.dport,
+        vendor_product='dionaea'
     )
 
 def beeswarm_hive(identifier, payload):
@@ -92,7 +94,8 @@ def beeswarm_hive(identifier, payload):
         src_ip=dec.attacker_ip, 
         dst_ip=dec.honey_ip,
         src_port=dec.attacker_source_port, 
-        dst_port=dec.honey_port
+        dst_port=dec.honey_port,
+        vendor_product='beeswarm'
     )
 
 def kippo_sessions(identifier, payload):
@@ -108,7 +111,8 @@ def kippo_sessions(identifier, payload):
         src_ip=dec.peerIP, 
         dst_ip=dec.hostIP,
         src_port=dec.peerPort, 
-        dst_port=dec.hostPort
+        dst_port=dec.hostPort,
+        vendor_product='kippo'
     )
 
 def conpot_events(identifier, payload):
@@ -131,7 +135,8 @@ def conpot_events(identifier, payload):
         src_ip=remote, 
         dst_ip=dec.public_ip,
         src_port=port,
-        dst_port=502
+        dst_port=502,
+        vendor_product='conpot'
     )
 
 def snort_alerts(identifier, payload):
@@ -148,7 +153,8 @@ def snort_alerts(identifier, payload):
         dst_ip=dec.destination_ip,
         src_port=dec.source_port, 
         dst_port=dec.destination_port,
-        transport=dec.protocol
+        transport=dec.protocol,
+        vendor_product='snort'
 
         # TODO: pull out the other snort specific items
         # 'snort': {
@@ -174,9 +180,10 @@ def suricata_events(identifier, payload):
         dst_ip=dec.destination_ip,
         src_port=dec.source_port, 
         dst_port=dec.destination_port,
-        transport=dec.protocol
+        transport=dec.protocol,
+        vendor_product='suricata'
 
-        # TODO: add the surricata specific items:
+        # TODO: add the suricata specific items:
         # 'suricata': {
         #         'action':         o_data['action'],
         #         'signature':      o_data['signature'],
@@ -199,7 +206,8 @@ def p0f_events(identifier, payload):
         src_ip=dec.client_ip, 
         dst_ip=dec.server_ip,
         src_port=dec.client_port, 
-        dst_port=dec.server_port
+        dst_port=dec.server_port,
+        vendor_product='p0f'
     )
     # TODO: add other p0f specific items:
     # def get_metadata(self, o_data, submission_timestamp):
@@ -228,6 +236,7 @@ def amun_events(identifier, payload):
         dst_ip=dec.victimIP,
         src_port=dec.attackerPort, 
         dst_port=dec.victimPort,
+        vendor_product='amun'
     )
 
 def wordpot_event(identifier, payload):
@@ -244,7 +253,8 @@ def wordpot_event(identifier, payload):
         src_ip=dec.source_ip, 
         dst_ip=dec.dest_ip,
         src_port=dec.source_port, 
-        dst_port=dec.dest_port
+        dst_port=dec.dest_port,
+        vendor_product='wordpot'
     )
 
 def shockpot_event(identifier, payload):
@@ -268,5 +278,6 @@ def shockpot_event(identifier, payload):
         src_ip=dec.source_ip, 
         dst_ip=dest_ip,
         src_port=0,
-        dst_port=dec.dest_port
+        dst_port=dec.dest_port,
+        vendor_product='shockpot'
     )
