@@ -1,67 +1,62 @@
+import json
+import hpfeeds
+import traceback
 import sys
 import logging
-logging.basicConfig(level=logging.CRITICAL)
+from logging.handlers import RotatingFileHandler
 
-import hpfeeds
-from processors import *
-
-import traceback
-
-HOST = 'localhost'
-PORT = 10000
-CHANNELS = [
-    'amun.events',
-    'dionaea.connections',
-    'dionaea.capture',
-    'glastopf.events',
-    'beeswarm.hive',
-    'kippo.sessions',
-    'conpot.events',
-    'snort.alerts'
-    'wordpot.events',
-    'shockpot.events',
-    'p0f.events',
-    'suricata.events',
-]
-IDENT = ''
-SECRET = ''
-
-if len(sys.argv) > 1:
-    print >>sys.stderr, "Parsing config file: %s"%sys.argv[1]
-    import json
-    config = json.load(file(sys.argv[1]))
-    HOST        = config["HOST"]
-    PORT        = config["PORT"]
-    # hpfeeds protocol has trouble with unicode, hence the utf-8 encoding here
-    CHANNELS    = [c.encode("utf-8") for c in config["CHANNELS"]]
-    IDENT       = config["IDENT"].encode("utf-8")
-    SECRET      = config["SECRET"].encode("utf-8")
-else:
-    print >>sys.stderr, "Warning: no config found, using default values for hpfeeds server"
+import processors
 
 PROCESSORS = {
-    'amun.events': [amun_events],
-    'glastopf.events': [glastopf_event,],
-    'dionaea.capture': [dionaea_capture,],
-    'dionaea.connections': [dionaea_connections,],
-    'beeswarm.hive': [beeswarm_hive,],
-    'kippo.sessions': [kippo_sessions,],
-    'conpot.events': [conpot_events,],
-    'snort.alerts': [snort_alerts,],
-    'wordpot.events': [wordpot_event,],
-    'shockpot.events': [shockpot_event,],
-    'p0f.events': [p0f_events,],
-    'suricata.events': [suricata_events,],
+    'amun.events': [processors.amun_events],
+    'glastopf.events': [processors.glastopf_event,],
+    'dionaea.capture': [processors.dionaea_capture,],
+    'dionaea.connections': [processors.dionaea_connections,],
+    'beeswarm.hive': [processors.beeswarm_hive,],
+    'kippo.sessions': [processors.kippo_sessions,],
+    'conpot.events': [processors.conpot_events,],
+    'snort.alerts': [processors.snort_alerts,],
+    'wordpot.events': [processors.wordpot_event,],
+    'shockpot.events': [processors.shockpot_event,],
+    'p0f.events': [processors.p0f_events,],
+    'suricata.events': [processors.suricata_events,],
 }
 
-def main():    
-    try:
-        hpc = hpfeeds.new(HOST, PORT, IDENT, SECRET)
-    except hpfeeds.FeedException, e:
-        print >>sys.stderr, 'feed exception:', e
+handler = logging.StreamHandler()
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
+logger = logging.getLogger('logger')
+logger.setLevel(logging.INFO)
+logger.addHandler(handler)
+
+def main():
+    if len(sys.argv) < 2:
+        logger.error("No config file found. Exiting")
         return 1
 
-    print >>sys.stderr, 'connected to', hpc.brokername
+    logger.info("Parsing config file: %s", sys.argv[1])
+
+    config = json.load(file(sys.argv[1]))
+    host        = config["host"]
+    port        = config["port"]
+    # hpfeeds protocol has trouble with unicode, hence the utf-8 encoding here
+    channels    = [c.encode("utf-8") for c in config["channels"]]
+    ident       = config["ident"].encode("utf-8")
+    secret      = config["secret"].encode("utf-8")
+    logfile     = config['log_file']
+
+    handler = RotatingFileHandler(logfile, maxBytes=100*1024*1024, backupCount=3)
+    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
+    data_logger = logging.getLogger('data')
+    data_logger.setLevel(logging.INFO)
+    data_logger.addHandler(handler)    
+
+    try:
+        hpc = hpfeeds.new(host, port, ident, SECRET)
+    except hpfeeds.FeedException, e:
+        logger.error('feed exception', e)
+        return 1
+
+    logger.info('connected to %s', hpc.brokername)
 
     def on_message(identifier, channel, payload):
         procs = PROCESSORS.get(channel, [])
@@ -69,32 +64,36 @@ def main():
             try:
                 message = processor(identifier, payload)
             except Exception, e:
-                print >> sys.stderr, "invalid message %s" % payload
-                traceback.print_exc(file=sys.stdout)
+                logger.error("invalid message %s", payload)
+                logger.exception(e)
                 continue
+
             if message: 
                 # TODO: log message to CIM format
-                print message
-                pass
-
+                data_logger.info(message)
 
     def on_error(payload):
-        print >>sys.stderr, ' -> errormessage from server: {0}'.format(payload)
+        logger.error('Error message from server: %s', payload)
         hpc.stop()
 
-    hpc.subscribe(CHANNELS)
+    hpc.subscribe(channels)
     try:
         hpc.run(on_message, on_error)
     except hpfeeds.FeedException, e:
-        print >>sys.stderr, 'feed exception:', e
+        logger.error('feed exception:')
+        logger.exception(e)
     except KeyboardInterrupt:
-        pass
+        logger.error('KeyboardInterrupt encountered, exiting ...')
     except:
-        traceback.print_exc()
+        logger.error('Unknown error encountered, exiting ...')
+        logger.exception(e)
     finally:
         hpc.close()
     return 0
 
 if __name__ == '__main__':
-    try: sys.exit(main())
-    except KeyboardInterrupt:sys.exit(0)
+    try: 
+        sys.exit(main())
+    except KeyboardInterrupt:
+        logger.error('KeyboardInterrupt encountered, exiting ...')
+        sys.exit(0)

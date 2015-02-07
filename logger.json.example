@@ -1,9 +1,9 @@
 {
-    "HOST": "localhost",
-    "PORT": 10000,
-    "IDENT": "splunk-logger", 
-    "SECRET": "",
-    "CHANNELS": [
+    "host": "localhost",
+    "port": 10000,
+    "ident": "splunk-logger", 
+    "secret": "",
+    "channels": [
         "amun.events",
         "dionaea.connections",
         "dionaea.capture",
@@ -16,5 +16,5 @@
         "shockpot.events",
         "p0f.events"
     ],
-    "LOG_FILE": "mhn-splunk-log.out"
+    "log_file": "mhn-splunk-log.out"
 }
