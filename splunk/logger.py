@@ -23,7 +23,6 @@ CHANNELS = [
     'p0f.events',
     'suricata.events',
 ]
-GEOLOC_CHAN = 'geoloc.events'
 IDENT = ''
 SECRET = ''
 
@@ -35,7 +34,6 @@ if len(sys.argv) > 1:
     PORT        = config["PORT"]
     # hpfeeds protocol has trouble with unicode, hence the utf-8 encoding here
     CHANNELS    = [c.encode("utf-8") for c in config["CHANNELS"]]
-    GEOLOC_CHAN = config["GEOLOC_CHAN"].encode("utf-8")
     IDENT       = config["IDENT"].encode("utf-8")
     SECRET      = config["SECRET"].encode("utf-8")
 else:

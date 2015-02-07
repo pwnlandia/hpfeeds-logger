@@ -15,7 +15,7 @@ def create_message(event_type, identifier, src_ip, dst_ip, src_port=None, dst_po
     message = {
         'type':   event_type, 
         'sensor': identifier, 
-        'time':   datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        'time':   datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
         'src_ip': src_ip,
         'dst_ip': dst_ip,
         'src_port': src_port,
