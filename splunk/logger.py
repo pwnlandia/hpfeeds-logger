@@ -22,7 +22,7 @@ PROCESSORS = {
 }
 
 handler = logging.StreamHandler()
-handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s', '%Y-%m-%d %H:%M:%S.%f'))
+handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
 logger = logging.getLogger('logger')
 logger.setLevel(logging.INFO)
 logger.addHandler(handler)
@@ -44,7 +44,7 @@ def main():
     logfile     = config['log_file']
 
     handler = RotatingFileHandler(logfile, maxBytes=100*1024*1024, backupCount=3)
-    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s', '%Y-%m-%d %H:%M:%S.%f'))
+    handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
     data_logger = logging.getLogger('data')
     data_logger.setLevel(logging.INFO)
     data_logger.addHandler(handler)
