@@ -10,8 +10,10 @@ class ezdict(object):
     def __getattr__(self, name):
         return self.d.get(name, None)
 
-def create_message(event_type, identifier, src_ip, dst_ip, src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None):
-    message = {
+def create_message(event_type, identifier, src_ip, dst_ip, 
+    src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None, 
+    direction=None, ids_type=None, severity=None, signature=None):
+    return {
         'type':   event_type, 
         'sensor': identifier, 
         'src_ip': src_ip,
@@ -20,10 +22,12 @@ def create_message(event_type, identifier, src_ip, dst_ip, src_port=None, dst_po
         'dst_port': dst_port,
         'transport': transport,
         'protocol': protocol,
-        'vendor_product': vendor_product
+        'vendor_product': vendor_product,
+        'direction': direction,
+        'ids_type': ids_type,
+        'severity': severity,
+        'signature': signature,
     }
-    return message
-
 
 def glastopf_event(identifier, payload):
     try:
@@ -43,8 +47,11 @@ def glastopf_event(identifier, payload):
         src_port=dec.source[1], 
         dst_ip=None,
         dst_port=80,
-        vendor_product='glastopf'
-        )
+        vendor_product='glastopf',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
+    )
 
 def dionaea_capture(identifier, payload):
     try:
@@ -60,7 +67,10 @@ def dionaea_capture(identifier, payload):
         dst_ip=dec.daddr,
         src_port=dec.sport, 
         dst_port=dec.dport,
-        vendor_product='dionaea'
+        vendor_product='dionaea',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
         # TODO: pull out md5 and sha512 and do something with it
     )
 
@@ -78,7 +88,10 @@ def dionaea_connections(identifier, payload):
         dst_ip=dec.local_host,
         src_port=dec.sport, 
         dst_port=dec.dport,
-        vendor_product='dionaea'
+        vendor_product='dionaea',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
     )
 
 def beeswarm_hive(identifier, payload):
@@ -95,7 +108,10 @@ def beeswarm_hive(identifier, payload):
         dst_ip=dec.honey_ip,
         src_port=dec.attacker_source_port, 
         dst_port=dec.honey_port,
-        vendor_product='beeswarm'
+        vendor_product='beeswarm',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
     )
 
 def kippo_sessions(identifier, payload):
@@ -112,7 +128,10 @@ def kippo_sessions(identifier, payload):
         dst_ip=dec.hostIP,
         src_port=dec.peerPort, 
         dst_port=dec.hostPort,
-        vendor_product='kippo'
+        vendor_product='kippo',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
     )
 
 def conpot_events(identifier, payload):
@@ -136,7 +155,10 @@ def conpot_events(identifier, payload):
         dst_ip=dec.public_ip,
         src_port=port,
         dst_port=502,
-        vendor_product='conpot'
+        vendor_product='conpot',
+        direction='inbound',
+        ids_type='network',
+        severity='medium',
     )
 
 def snort_alerts(identifier, payload):
@@ -154,7 +176,11 @@ def snort_alerts(identifier, payload):
         src_port=dec.source_port, 
         dst_port=dec.destination_port,
         transport=dec.protocol,
-        vendor_product='snort'
+        vendor_product='snort',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
+        signature=dec.signature,
 
         # TODO: pull out the other snort specific items
         # 'snort': {
@@ -181,7 +207,11 @@ def suricata_events(identifier, payload):
         src_port=dec.source_port, 
         dst_port=dec.destination_port,
         transport=dec.protocol,
-        vendor_product='suricata'
+        vendor_product='suricata',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
+        signature=dec.signature,
 
         # TODO: add the suricata specific items:
         # 'suricata': {
@@ -207,7 +237,10 @@ def p0f_events(identifier, payload):
         dst_ip=dec.server_ip,
         src_port=dec.client_port, 
         dst_port=dec.server_port,
-        vendor_product='p0f'
+        vendor_product='p0f',
+        direction='inbound',
+        ids_type='network',
+        severity='informational',
     )
     # TODO: add other p0f specific items:
     # def get_metadata(self, o_data, submission_timestamp):
@@ -236,7 +269,10 @@ def amun_events(identifier, payload):
         dst_ip=dec.victimIP,
         src_port=dec.attackerPort, 
         dst_port=dec.victimPort,
-        vendor_product='amun'
+        vendor_product='amun',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
     )
 
 def wordpot_event(identifier, payload):
@@ -254,7 +290,10 @@ def wordpot_event(identifier, payload):
         dst_ip=dec.dest_ip,
         src_port=dec.source_port, 
         dst_port=dec.dest_port,
-        vendor_product='wordpot'
+        vendor_product='wordpot',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
     )
 
 def shockpot_event(identifier, payload):
@@ -279,5 +318,8 @@ def shockpot_event(identifier, payload):
         dst_ip=dest_ip,
         src_port=0,
         dst_port=dec.dest_port,
-        vendor_product='shockpot'
+        vendor_product='shockpot',
+        direction='inbound',
+        ids_type='network',
+        severity='high',
     )

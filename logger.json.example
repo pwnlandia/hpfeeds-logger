@@ -16,5 +16,6 @@
         "shockpot.events",
         "p0f.events"
     ],
-    "log_file": "mhn-splunk-log.out"
+    "log_file": "mhn-splunk-log.out",
+    "formatter_name": "splunk"
 }
