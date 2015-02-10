@@ -3,6 +3,8 @@ import json
 import traceback
 import urlparse
 import socket
+import hashlib
+import re
 
 class ezdict(object):
     def __init__(self, d):
@@ -12,8 +14,9 @@ class ezdict(object):
 
 def create_message(event_type, identifier, src_ip, dst_ip, 
     src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None, 
-    direction=None, ids_type=None, severity=None, signature=None, app=None):
-    return {
+    direction=None, ids_type=None, severity=None, signature=None, app=None, **kwargs):
+    msg = dict(kwargs)
+    msg.update({
         'type':   event_type, 
         'sensor': identifier, 
         'src_ip': src_ip,
@@ -28,7 +31,8 @@ def create_message(event_type, identifier, src_ip, dst_ip,
         'severity': severity,
         'signature': signature,
         'app': app,
-    }
+    })
+    return msg
 
 def glastopf_event(identifier, payload):
     try:
@@ -76,7 +80,9 @@ def dionaea_capture(identifier, payload):
         ids_type='network',
         severity='high',
         signature='Connection to Honeypot',
-        # TODO: pull out md5 and sha512 and do something with it
+        url=dec.url,
+        md5=dec.md5,
+        sha512=dec.sha512,
     )
 
 def dionaea_connections(identifier, payload):
@@ -259,19 +265,11 @@ def p0f_events(identifier, payload):
         ids_type='network',
         severity='informational',
         signature='Packet Observed by p0f',
+        p0f_app=dec.app,
+        p0f_link=dec.link,
+        p0f_os=dec.os,
+        p0f_uptime=dec.uptime,
     )
-    # TODO: add other p0f specific items:
-    # def get_metadata(self, o_data, submission_timestamp):
-    #     metadata = {}
-    #     for name in ['app', 'link', 'os', 'uptime', ]:
-    #         if name in o_data and o_data[name] != '???':
-    #             metadata[name] = o_data[name]
-    #     if metadata:
-    #         metadata['ip'] = o_data['client_ip']
-    #         metadata['honeypot'] = 'p0f'
-    #         metadata['timestamp'] = submission_timestamp
-    #     return metadata
-
 
 def amun_events(identifier, payload):
     try:
@@ -326,10 +324,34 @@ def shockpot_event(identifier, payload):
         traceback.print_exc()
         return None
 
+    kwargs = {}
+    if dec.command_data:
+        m = hashlib.md5()
+        m.update(dec.command_data)
+        kwargs['md5'] = m.hexdigest()
+
+        m = hashlib.sha1()
+        m.update(dec.command_data)
+        kwargs['sha1'] = m.hexdigest()
+
+        m = hashlib.sha256()
+        m.update(dec.command_data)
+        kwargs['sha256'] = m.hexdigest()
+
+        m = hashlib.sha512()
+        m.update(dec.command_data)
+        kwargs['sha512'] = m.hexdigest()
+
+    if dec.command:
+        m = re.search('(?P<url>https?://[^\s;]+)', dec.command)
+        if m:
+            kwargs.update(m.groupdict())
+
     try:
         p = urlparse.urlparse(dec.url)
-        socket.inet_aton(urlparse.urlparse(dec.url).netloc)
-        dest_ip = p.netloc
+        host = p.netloc.split(':')[0]
+        socket.inet_aton(host)
+        dest_ip = host
     except:
         dest_ip = None
 
@@ -346,4 +368,5 @@ def shockpot_event(identifier, payload):
         ids_type='network',
         severity='high',
         signature='Shellshock Exploit Attempted',
+        **kwargs
     )
