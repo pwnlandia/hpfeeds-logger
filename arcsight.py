@@ -11,7 +11,7 @@ def format(message):
         "direction": "deviceDirection",
         "vendor_product": "cs1",
         "ids_type": "cs2",
-        "app": "ds3",
+        "app": "cs3",
     }
 
     severity_map = {
