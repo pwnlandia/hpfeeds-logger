@@ -53,6 +53,7 @@ def glastopf_event(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Connection to Honeypot',
     )
 
 def dionaea_capture(identifier, payload):
@@ -74,6 +75,7 @@ def dionaea_capture(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Connection to Honeypot',
         # TODO: pull out md5 and sha512 and do something with it
     )
 
@@ -89,13 +91,14 @@ def dionaea_connections(identifier, payload):
         identifier, 
         src_ip=dec.remote_host, 
         dst_ip=dec.local_host,
-        src_port=dec.sport, 
-        dst_port=dec.dport,
+        src_port=dec.remote_port, 
+        dst_port=dec.local_port,
         vendor_product='Dionaea',
         app='dionaea',
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Connection to Honeypot',
     )
 
 def beeswarm_hive(identifier, payload):
@@ -117,6 +120,7 @@ def beeswarm_hive(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Connection to Honeypot',
     )
 
 def kippo_sessions(identifier, payload):
@@ -138,6 +142,7 @@ def kippo_sessions(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='SSH login to kippo honeypot',
     )
 
 def conpot_events(identifier, payload):
@@ -166,6 +171,8 @@ def conpot_events(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='medium',
+        signature='Connection to Honeypot',
+
     )
 
 def snort_alerts(identifier, payload):
@@ -251,6 +258,7 @@ def p0f_events(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='informational',
+        signature='Packet Observed by p0f',
     )
     # TODO: add other p0f specific items:
     # def get_metadata(self, o_data, submission_timestamp):
@@ -284,6 +292,7 @@ def amun_events(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Connection to Honeypot',
     )
 
 def wordpot_event(identifier, payload):
@@ -306,6 +315,7 @@ def wordpot_event(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Wordpress Exploit, Scan, or Enumeration Attempted',
     )
 
 def shockpot_event(identifier, payload):
@@ -335,4 +345,5 @@ def shockpot_event(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
+        signature='Shellshock Exploit Attempted',
     )
