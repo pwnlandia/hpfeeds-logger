@@ -35,7 +35,7 @@ def format(message):
             if name == 'direction':
                 value = 0 if value == 'inbound' else 1
             outmsg += "{}={} ".format(mappingDict[name], value)
-            if mappingDict[name][:1] == "cs":
+            if mappingDict[name][:2] == "cs":
                 outmsg += "{}Label={} ".format(mappingDict[name], name)
 
     return outmsg.strip() # remove the trailing whitespace
