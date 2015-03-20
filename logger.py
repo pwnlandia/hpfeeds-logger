@@ -82,7 +82,11 @@ def main():
                 continue
 
             if message: 
-                data_logger.info(formatter(message))
+                if isinstance(message, list):
+                    for msg in message:
+                        data_logger.info(formatter(msg))
+                else:
+                    data_logger.info(formatter(message))
 
     def on_error(payload):
         logger.error('Error message from server: %s', payload)
@@ -96,7 +100,7 @@ def main():
         logger.exception(e)
     except KeyboardInterrupt:
         logger.error('KeyboardInterrupt encountered, exiting ...')
-    except:
+    except Exception as e:
         logger.error('Unknown error encountered, exiting ...')
         logger.exception(e)
     finally:

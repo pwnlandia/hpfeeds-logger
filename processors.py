@@ -136,7 +136,10 @@ def kippo_sessions(identifier, payload):
         print 'exception processing kippo event'
         traceback.print_exc()
         return
-    return create_message(
+
+    messages = []
+
+    base_message = create_message(
         'kippo.sessions', 
         identifier, 
         src_ip=dec.peerIP, 
@@ -148,8 +151,42 @@ def kippo_sessions(identifier, payload):
         direction='inbound',
         ids_type='network',
         severity='high',
-        signature='SSH login to kippo honeypot',
+        signature='SSH session on kippo honeypot',
+        ssh_version=dec.version
     )
+
+    messages.append(base_message)
+
+    if dec.credentials:
+        for username, password in dec.credentials:
+            msg = dict(base_message)
+            msg['signature'] = 'SSH login attempted on kippo honeypot'
+            msg['ssh_username'] = username
+            msg['ssh_password'] = password
+            messages.append(msg)
+
+    if dec.urls:
+        for url in dec.urls:
+            msg = dict(base_message)
+            msg['signature'] = 'URL download attempted on kippo honeypot'
+            msg['url'] = url
+            messages.append(msg)
+
+    if dec.commands:
+        for command in dec.commands:
+            msg = dict(base_message)
+            msg['signature'] = 'command attempted on kippo honeypot'
+            msg['command'] = command
+            messages.append(msg)
+
+    if dec.unknownCommands:
+        for command in dec.unknownCommands:
+            msg = dict(base_message)
+            msg['signature'] = 'unknown command attempted on kippo honeypot'
+            msg['command'] = command
+            messages.append(msg)
+
+    return messages
 
 def conpot_events(identifier, payload):
     try:
