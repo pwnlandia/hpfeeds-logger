@@ -12,4 +12,4 @@ def format(message):
         outmsg['dest'] = outmsg['dest_ip']
         del outmsg['dest_ip']
 
-    return u' '.join(['{}={}'.format(name, value) for name, value in outmsg.items() if value])
+    return u', '.join([u'{}="{}"'.format(name, unicode(value).replace('"', '\\"')) for name, value in outmsg.items() if value])
