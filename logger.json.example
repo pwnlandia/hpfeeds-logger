@@ -12,6 +12,7 @@
         "kippo.sessions",
         "conpot.events",
         "snort.alerts",
+        "suricata.events",
         "wordpot.events",
         "shockpot.events",
         "p0f.events"
