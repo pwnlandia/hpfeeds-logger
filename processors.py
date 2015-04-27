@@ -407,3 +407,42 @@ def shockpot_event(identifier, payload):
         signature='Shellshock Exploit Attempted',
         **kwargs
     )
+
+
+def elastichoney_events(identifier, payload):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing elastichoney alert'
+        traceback.print_exc()
+        return
+
+    if dec.type == 'attack':
+        severity = 'high'
+        signature = 'ElasticSearch Exploit Attempted'
+    else:
+        severity = 'medium'
+        signature = 'ElasticSearch Recon Attempted'
+
+    user_agent = ''
+    if dec.headers:
+        if dec.headers.user_agent:
+            user_agent = dec.headers.user_agent
+
+    return create_message(
+        'elastichoney.events',
+        identifier,
+        src_ip=dec.source,
+        dst_ip=dec.honeypot,
+        src_port=0,
+        dst_port=9200,
+        vendor_product='ElasticHoney',
+        app='elastichoney',
+        direction='inbound',
+        ids_type='network',
+        severity=severity,
+        signature=signature,
+        elastichoney_form=dec.form,
+        elastichoney_payload=dec.payload,
+        elastichoney_user_agent=user_agent,
+    )

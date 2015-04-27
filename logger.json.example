@@ -15,7 +15,8 @@
         "suricata.events",
         "wordpot.events",
         "shockpot.events",
-        "p0f.events"
+        "p0f.events",
+        "elastichoney.events"
     ],
     "log_file": "mhn-splunk-log.out",
     "formatter_name": "splunk"
