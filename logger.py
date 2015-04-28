@@ -21,6 +21,7 @@ PROCESSORS = {
     'shockpot.events': [processors.shockpot_event,],
     'p0f.events': [processors.p0f_events,],
     'suricata.events': [processors.suricata_events,],
+    'elastichoney.events': [processors.elastichoney_events,],
 }
 
 FORMATTERS = {

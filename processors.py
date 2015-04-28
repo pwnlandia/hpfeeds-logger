@@ -6,19 +6,23 @@ import socket
 import hashlib
 import re
 
+
 class ezdict(object):
     def __init__(self, d):
         self.d = d
+
     def __getattr__(self, name):
         return self.d.get(name, None)
 
-def create_message(event_type, identifier, src_ip, dst_ip, 
-    src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None, 
+
+def create_message(event_type, identifier, src_ip, dst_ip,
+    src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None,
     direction=None, ids_type=None, severity=None, signature=None, app=None, **kwargs):
+
     msg = dict(kwargs)
     msg.update({
-        'type':   event_type, 
-        'sensor': identifier, 
+        'type':   event_type,
+        'sensor': identifier,
         'src_ip': src_ip,
         'dest_ip': dst_ip,
         'src_port': src_port,
@@ -34,22 +38,23 @@ def create_message(event_type, identifier, src_ip, dst_ip,
     })
     return msg
 
+
 def glastopf_event(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
     except:
         print 'exception processing glastopf event'
         traceback.print_exc()
-        return None 
+        return None
 
-    if dec.pattern == 'unknown': 
+    if dec.pattern == 'unknown':
         return None
 
     return create_message(
-        'glastopf.events', 
-        identifier, 
-        src_ip=dec.source[0], 
-        src_port=dec.source[1], 
+        'glastopf.events',
+        identifier,
+        src_ip=dec.source[0],
+        src_port=dec.source[1],
         dst_ip=None,
         dst_port=80,
         vendor_product='Glastopf',
@@ -60,6 +65,7 @@ def glastopf_event(identifier, payload):
         signature='Connection to Honeypot',
     )
 
+
 def dionaea_capture(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -68,11 +74,11 @@ def dionaea_capture(identifier, payload):
         traceback.print_exc()
         return
     return create_message(
-        'dionaea.capture', 
-        identifier, 
-        src_ip=dec.saddr, 
+        'dionaea.capture',
+        identifier,
+        src_ip=dec.saddr,
         dst_ip=dec.daddr,
-        src_port=dec.sport, 
+        src_port=dec.sport,
         dst_port=dec.dport,
         vendor_product='Dionaea',
         app='dionaea',
@@ -85,6 +91,7 @@ def dionaea_capture(identifier, payload):
         sha512=dec.sha512,
     )
 
+
 def dionaea_connections(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -93,11 +100,11 @@ def dionaea_connections(identifier, payload):
         traceback.print_exc()
         return
     return create_message(
-        'dionaea.connections', 
-        identifier, 
-        src_ip=dec.remote_host, 
+        'dionaea.connections',
+        identifier,
+        src_ip=dec.remote_host,
         dst_ip=dec.local_host,
-        src_port=dec.remote_port, 
+        src_port=dec.remote_port,
         dst_port=dec.local_port,
         vendor_product='Dionaea',
         app='dionaea',
@@ -107,6 +114,7 @@ def dionaea_connections(identifier, payload):
         signature='Connection to Honeypot',
     )
 
+
 def beeswarm_hive(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -115,11 +123,11 @@ def beeswarm_hive(identifier, payload):
         traceback.print_exc()
         return
     return create_message(
-        'beeswarm.hive', 
-        identifier, 
-        src_ip=dec.attacker_ip, 
+        'beeswarm.hive',
+        identifier,
+        src_ip=dec.attacker_ip,
         dst_ip=dec.honey_ip,
-        src_port=dec.attacker_source_port, 
+        src_port=dec.attacker_source_port,
         dst_port=dec.honey_port,
         vendor_product='Beeswarm',
         app='beeswarm',
@@ -128,6 +136,7 @@ def beeswarm_hive(identifier, payload):
         severity='high',
         signature='Connection to Honeypot',
     )
+
 
 def kippo_sessions(identifier, payload):
     try:
@@ -140,11 +149,11 @@ def kippo_sessions(identifier, payload):
     messages = []
 
     base_message = create_message(
-        'kippo.sessions', 
-        identifier, 
-        src_ip=dec.peerIP, 
+        'kippo.sessions',
+        identifier,
+        src_ip=dec.peerIP,
         dst_ip=dec.hostIP,
-        src_port=dec.peerPort, 
+        src_port=dec.peerPort,
         dst_port=dec.hostPort,
         vendor_product='Kippo',
         app='kippo',
@@ -188,6 +197,7 @@ def kippo_sessions(identifier, payload):
 
     return messages
 
+
 def conpot_events(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -203,9 +213,9 @@ def conpot_events(identifier, payload):
         return
 
     return create_message(
-        'conpot.events-'+dec.data_type, 
-        identifier, 
-        src_ip=remote, 
+        'conpot.events-'+dec.data_type,
+        identifier,
+        src_ip=remote,
         dst_ip=dec.public_ip,
         src_port=port,
         dst_port=502,
@@ -218,6 +228,7 @@ def conpot_events(identifier, payload):
 
     )
 
+
 def snort_alerts(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -226,11 +237,11 @@ def snort_alerts(identifier, payload):
         traceback.print_exc()
         return None
     return create_message(
-        'snort.alerts', 
-        identifier, 
-        src_ip=dec.source_ip, 
+        'snort.alerts',
+        identifier,
+        src_ip=dec.source_ip,
         dst_ip=dec.destination_ip,
-        src_port=dec.source_port, 
+        src_port=dec.source_port,
         dst_port=dec.destination_port,
         transport=dec.protocol,
         vendor_product='Snort',
@@ -250,6 +261,7 @@ def snort_alerts(identifier, payload):
         #     'sensor': o_data['sensor'] # UUID
     )
 
+
 def suricata_events(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -258,11 +270,11 @@ def suricata_events(identifier, payload):
         traceback.print_exc()
         return None
     return create_message(
-        'suricata.events', 
-        identifier, 
-        src_ip=dec.source_ip, 
+        'suricata.events',
+        identifier,
+        src_ip=dec.source_ip,
         dst_ip=dec.destination_ip,
-        src_port=dec.source_port, 
+        src_port=dec.source_port,
         dst_port=dec.destination_port,
         transport=dec.protocol,
         vendor_product='Suricata',
@@ -282,6 +294,7 @@ def suricata_events(identifier, payload):
         #     'sensor': o_data['sensor'] # UUID
     )
 
+
 def p0f_events(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -290,11 +303,11 @@ def p0f_events(identifier, payload):
         traceback.print_exc()
         return None
     return create_message(
-        'p0f.events', 
-        identifier, 
-        src_ip=dec.client_ip, 
+        'p0f.events',
+        identifier,
+        src_ip=dec.client_ip,
         dst_ip=dec.server_ip,
-        src_port=dec.client_port, 
+        src_port=dec.client_port,
         dst_port=dec.server_port,
         vendor_product='p0f',
         app='p0f',
@@ -308,6 +321,7 @@ def p0f_events(identifier, payload):
         p0f_uptime=dec.uptime,
     )
 
+
 def amun_events(identifier, payload):
     try:
         dec = ezdict(json.loads(str(payload)))
@@ -316,11 +330,11 @@ def amun_events(identifier, payload):
         traceback.print_exc()
         return
     return create_message(
-        'amun.events', 
-        identifier, 
-        src_ip=dec.attackerIP, 
+        'amun.events',
+        identifier,
+        src_ip=dec.attackerIP,
         dst_ip=dec.victimIP,
-        src_port=dec.attackerPort, 
+        src_port=dec.attackerPort,
         dst_port=dec.victimPort,
         vendor_product='Amun',
         app='amun',
@@ -329,6 +343,7 @@ def amun_events(identifier, payload):
         severity='high',
         signature='Connection to Honeypot',
     )
+
 
 def wordpot_event(identifier, payload):
     try:
@@ -339,11 +354,11 @@ def wordpot_event(identifier, payload):
         return
 
     return create_message(
-        'wordpot.alerts', 
-        identifier, 
-        src_ip=dec.source_ip, 
+        'wordpot.alerts',
+        identifier,
+        src_ip=dec.source_ip,
         dst_ip=dec.dest_ip,
-        src_port=dec.source_port, 
+        src_port=dec.source_port,
         dst_port=dec.dest_port,
         vendor_product='Wordpot',
         app='wordpot',
@@ -352,6 +367,7 @@ def wordpot_event(identifier, payload):
         severity='high',
         signature='Wordpress Exploit, Scan, or Enumeration Attempted',
     )
+
 
 def shockpot_event(identifier, payload):
     try:
@@ -393,9 +409,9 @@ def shockpot_event(identifier, payload):
         dest_ip = None
 
     return create_message(
-        'shockpot.events', 
-        identifier, 
-        src_ip=dec.source_ip, 
+        'shockpot.events',
+        identifier,
+        src_ip=dec.source_ip,
         dst_ip=dest_ip,
         src_port=0,
         dst_port=dec.dest_port,
@@ -406,4 +422,42 @@ def shockpot_event(identifier, payload):
         severity='high',
         signature='Shellshock Exploit Attempted',
         **kwargs
+    )
+
+
+def elastichoney_events(identifier, payload):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing elastichoney alert'
+        traceback.print_exc()
+        return
+
+    if dec.type == 'attack':
+        severity = 'high'
+        signature = 'ElasticSearch Exploit Attempted'
+    else:
+        severity = 'medium'
+        signature = 'ElasticSearch Recon Attempted'
+
+    user_agent = ''
+    if dec.headers:
+        user_agent = dec.headers.get('user_agent', '')
+
+    return create_message(
+        'elastichoney.events',
+        identifier,
+        src_ip=dec.source,
+        dst_ip=dec.honeypot,
+        src_port=0,
+        dst_port=9200,
+        vendor_product='ElasticHoney',
+        app='elastichoney',
+        direction='inbound',
+        ids_type='network',
+        severity=severity,
+        signature=signature,
+        elastichoney_form=dec.form,
+        elastichoney_payload=dec.payload,
+        user_agent=user_agent,
     )
