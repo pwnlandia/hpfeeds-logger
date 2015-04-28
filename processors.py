@@ -440,6 +440,7 @@ def elastichoney_events(identifier, payload):
         severity = 'medium'
         signature = 'ElasticSearch Recon Attempted'
 
+    user_agent = ''
     if dec.headers:
         user_agent = dec.headers.get('user_agent', '')
 
