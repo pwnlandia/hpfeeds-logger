@@ -1,15 +1,16 @@
+#!/usr/bin/env python
+
 import json
 import hpfeeds
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-
-import processors
-import formatters
+from hpfeedslogger.formatters import splunk, arcsight
+from hpfeedslogger import processors
 
 FORMATTERS = {
-    'splunk': formatters.splunk.format,
-    'arcsight': formatters.arcsight.format,
+    'splunk': splunk.format,
+    'arcsight': arcsight.format,
 }
 
 handler = logging.StreamHandler()

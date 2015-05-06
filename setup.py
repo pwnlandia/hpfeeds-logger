@@ -26,11 +26,9 @@ from distutils.cmd import Command
 
 long_description = """A library for consuming messages from hpfeeds honeypots and normalizing them"""
 
-VERSION = open('VERSION.txt').read().strip()
-
 setup(
-    name='hpfeedslogger',
-    version=VERSION,
+    name='hpfeeds-logger',
+    version='0.0.1a',
     author='Jason Trost',
     author_email='jason.trost AT threatstream.com',
     maintainer='ThreatStream, Inc.',
@@ -44,13 +42,14 @@ setup(
         'hpfeedslogger.formatters',
         'hpfeedslogger'
     ],
-    install_requires=['hpfeeds'],
+    scripts=['bin/hpfeeds-logger'],
+    install_requires=['hpfeeds-threatstream==1.0'],
     tests_require=[],
     py_modules=['ez_setup'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: LGPL',
+        'License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
         'Natural Language :: English',
         'Operating System :: OS Independent',
         'Programming Language :: Python',
