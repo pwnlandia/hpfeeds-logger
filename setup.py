@@ -35,7 +35,7 @@ setup(
     author_email='jason.trost AT threatstream.com',
     maintainer='ThreatStream, Inc.',
     maintainer_email='jason.trost AT threatstream.com',
-    license='License :: OSI Approved :: LPGL',
+    license='License :: OSI Approved :: GNU Lesser General Public License v2 or later (LGPLv2+)',
     description='Python library to normalize and log hpfeeds honeypot messages',
     long_description=long_description,
     url='https://github.com/threatstream/hpfeeds-logger',
