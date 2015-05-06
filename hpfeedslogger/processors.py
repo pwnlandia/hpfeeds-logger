@@ -6,7 +6,6 @@ import socket
 import hashlib
 import re
 
-
 class ezdict(object):
     def __init__(self, d):
         self.d = d
@@ -461,3 +460,40 @@ def elastichoney_events(identifier, payload):
         elastichoney_payload=dec.payload,
         user_agent=user_agent,
     )
+
+PROCESSORS = {
+    'amun.events': [amun_events],
+    'glastopf.events': [glastopf_event],
+    'dionaea.capture': [dionaea_capture],
+    'dionaea.connections': [dionaea_connections],
+    'beeswarm.hive': [beeswarm_hive],
+    'kippo.sessions': [kippo_sessions],
+    'conpot.events': [conpot_events],
+    'snort.alerts': [snort_alerts],
+    'wordpot.events': [wordpot_event],
+    'shockpot.events': [shockpot_event],
+    'p0f.events': [p0f_events],
+    'suricata.events': [suricata_events],
+    'elastichoney.events': [elastichoney_events],
+}
+
+class HpfeedsMessageProcessor(object):
+    def process(self, identifier, channel, payload, ignore_errors=False):
+        procs = PROCESSORS.get(channel, [])
+        results = []
+        for processor in procs:
+            if ignore_errors:
+                try:
+                    message = processor(identifier, payload)
+                except:
+                    continue
+            else:
+                message = processor(identifier, payload)
+
+            if message:
+                if isinstance(message, list):
+                    for msg in message:
+                        results.append(msg)
+                else:
+                    results.append(message)
+        return results

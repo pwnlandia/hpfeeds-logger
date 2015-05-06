@@ -5,28 +5,11 @@ import logging
 from logging.handlers import RotatingFileHandler
 
 import processors
-import splunk
-import arcsight
-
-PROCESSORS = {
-    'amun.events': [processors.amun_events],
-    'glastopf.events': [processors.glastopf_event,],
-    'dionaea.capture': [processors.dionaea_capture,],
-    'dionaea.connections': [processors.dionaea_connections,],
-    'beeswarm.hive': [processors.beeswarm_hive,],
-    'kippo.sessions': [processors.kippo_sessions,],
-    'conpot.events': [processors.conpot_events,],
-    'snort.alerts': [processors.snort_alerts,],
-    'wordpot.events': [processors.wordpot_event,],
-    'shockpot.events': [processors.shockpot_event,],
-    'p0f.events': [processors.p0f_events,],
-    'suricata.events': [processors.suricata_events,],
-    'elastichoney.events': [processors.elastichoney_events,],
-}
+import formatters
 
 FORMATTERS = {
-    'splunk': splunk.format,
-    'arcsight': arcsight.format,
+    'splunk': formatters.splunk.format,
+    'arcsight': formatters.arcsight.format,
 }
 
 handler = logging.StreamHandler()
@@ -51,10 +34,11 @@ def main():
     secret      = config['secret'].encode('utf-8')
     logfile     = config['log_file']
 
+    processor = processors.HpfeedsMessageProcessor()
     formatter = FORMATTERS.get(config['formatter_name'])
     if not formatter:
         logger.error('Unsupported data log formatter encountered: %s. Exiting.', config['formatter_name'])
-        return 1    
+        return 1
 
     handler = RotatingFileHandler(logfile, maxBytes=100*1024*1024, backupCount=3)
     handler.setFormatter(logging.Formatter('%(asctime)s %(message)s'))
@@ -73,21 +57,8 @@ def main():
     logger.info('connected to %s', hpc.brokername)
 
     def on_message(identifier, channel, payload):
-        procs = PROCESSORS.get(channel, [])
-        for processor in procs:
-            try:
-                message = processor(identifier, payload)
-            except Exception, e:
-                logger.error('invalid message %s', payload)
-                logger.exception(e)
-                continue
-
-            if message: 
-                if isinstance(message, list):
-                    for msg in message:
-                        data_logger.info(formatter(msg))
-                else:
-                    data_logger.info(formatter(message))
+        for msg in processor.process(identifier, channel, payload, ignore_errors=True):
+            data_logger.info(formatter(msg))
 
     def on_error(payload):
         logger.error('Error message from server: %s', payload)
@@ -109,7 +80,7 @@ def main():
     return 0
 
 if __name__ == '__main__':
-    try: 
+    try:
         sys.exit(main())
     except KeyboardInterrupt:
         logger.error('KeyboardInterrupt encountered, exiting ...')
