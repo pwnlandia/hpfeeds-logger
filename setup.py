@@ -28,7 +28,7 @@ long_description = """A library for consuming messages from hpfeeds honeypots an
 
 setup(
     name='hpfeeds-logger',
-    version='0.0.1a',
+    version='0.0.2a',
     author='Jason Trost',
     author_email='jason.trost AT threatstream.com',
     maintainer='ThreatStream, Inc.',
@@ -43,7 +43,10 @@ setup(
         'hpfeedslogger'
     ],
     scripts=['bin/hpfeeds-logger'],
-    install_requires=['hpfeeds-threatstream==1.0'],
+    install_requires=[
+        'hpfeeds-threatstream==1.0',
+        'GeoIP==1.3.2'
+    ],
     tests_require=[],
     py_modules=['ez_setup'],
     classifiers=[

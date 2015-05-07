@@ -5,6 +5,7 @@ import urlparse
 import socket
 import hashlib
 import re
+import GeoIP
 
 class ezdict(object):
     def __init__(self, d):
@@ -13,6 +14,38 @@ class ezdict(object):
     def __getattr__(self, name):
         return self.d.get(name, None)
 
+def geo_intel(maxmind_geo, maxmind_asn, ip, prefix=''):
+    result = {
+        'city': None,
+        'region_name': None,
+        'region': None,
+        'area_code': None,
+        'time_zone': None,
+        'longitude': None,
+        'metro_code': None,
+        'country_code3': None,
+        'latitude': None,
+        'postal_code': None,
+        'dma_code': None,
+        'country_code': None,
+        'country_name': None,
+        'org': None
+    }
+
+    if maxmind_geo:
+        geo = maxmind_geo.record_by_addr(ip)
+        if geo:
+            if geo['city'] is not None:
+                geo['city'] = geo['city'].decode('latin1')
+            result.update(geo)
+
+    if maxmind_asn:
+        org = maxmind_asn.org_by_addr(ip)
+        if org:
+            result['org'] = org.decode('latin-1')
+    if prefix:
+        result = dict((prefix+name, value) for name, value in result.items())
+    return result
 
 def create_message(event_type, identifier, src_ip, dst_ip,
     src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None,
@@ -478,6 +511,22 @@ PROCESSORS = {
 }
 
 class HpfeedsMessageProcessor(object):
+    def __init__(self, maxmind_geo_file=None, maxmind_asn_file=None):
+        self.maxmind_geo = None
+        self.maxmind_asn = None
+
+        if maxmind_geo_file:
+            self.maxmind_geo = GeoIP.open(maxmind_geo_file, GeoIP.GEOIP_STANDARD)
+        if maxmind_asn_file:
+            self.maxmind_asn = GeoIP.open(maxmind_asn_file, GeoIP.GEOIP_STANDARD)
+
+    def geo_intelligence_enrichment(self, messages):
+        for message in messages:
+            src_geo = geo_intel(self.maxmind_geo, self.maxmind_asn, message.get('src_ip'), prefix='src_')
+            message.update(src_geo)
+            dst_geo = geo_intel(self.maxmind_geo, self.maxmind_asn, message.get('dest_ip'), prefix='dest_')
+            message.update(dst_geo)
+
     def process(self, identifier, channel, payload, ignore_errors=False):
         procs = PROCESSORS.get(channel, [])
         results = []
@@ -496,4 +545,6 @@ class HpfeedsMessageProcessor(object):
                         results.append(msg)
                 else:
                     results.append(message)
+        if self.maxmind_geo or self.maxmind_asn:
+            self.geo_intelligence_enrichment(results)
         return results
