@@ -7,12 +7,22 @@ import hashlib
 import re
 import GeoIP
 
+IPV6_REGEX = re.compile(r'::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
+
+def clean_ip(ip):
+    mat = IPV6_REGEX.search(ip)
+    if mat:
+        return mat.group(1)
+    return ip
+
+
 class ezdict(object):
     def __init__(self, d):
         self.d = d
 
     def __getattr__(self, name):
         return self.d.get(name, None)
+
 
 def geo_intel(maxmind_geo, maxmind_asn, ip, prefix=''):
     result = {
@@ -55,8 +65,8 @@ def create_message(event_type, identifier, src_ip, dst_ip,
     msg.update({
         'type':   event_type,
         'sensor': identifier,
-        'src_ip': src_ip,
-        'dest_ip': dst_ip,
+        'src_ip': clean_ip(src_ip),
+        'dest_ip': clean_ip(dst_ip),
         'src_port': src_port,
         'dest_port': dst_port,
         'transport': transport,
@@ -82,6 +92,18 @@ def glastopf_event(identifier, payload):
     if dec.pattern == 'unknown':
         return None
 
+    request_url = None
+    try:
+        # from mnemosyne...
+        if 'Host' in dec['request']['header'] and not dec['request']['url'].startswith('http'):
+            request_url = 'http://' + dec['request']['header']['Host'] + dec['request']['url']
+        else:
+            #best of luck!
+            request_url = dec['request']['url']
+    except:
+        print 'exception processing glastopf url, ignoring'
+        traceback.print_exc()
+
     return create_message(
         'glastopf.events',
         identifier,
@@ -95,6 +117,7 @@ def glastopf_event(identifier, payload):
         ids_type='network',
         severity='high',
         signature='Connection to Honeypot',
+        request_url=request_url,
     )
 
 
@@ -144,6 +167,7 @@ def dionaea_connections(identifier, payload):
         ids_type='network',
         severity='high',
         signature='Connection to Honeypot',
+        dionaea_action=dec.connection_type,
     )
 
 
@@ -268,6 +292,12 @@ def snort_alerts(identifier, payload):
         print 'exception processing snort alert'
         traceback.print_exc()
         return None
+
+    # extra snort fields
+    kwargs = {}
+    for field in ['header', 'classification', 'priority']:
+        kwargs['snort_{}'.format(field)] = dec.get(field)
+
     return create_message(
         'snort.alerts',
         identifier,
@@ -282,15 +312,16 @@ def snort_alerts(identifier, payload):
         ids_type='network',
         severity='high',
         signature=dec.signature,
-
-        # TODO: pull out the other snort specific items
-        # 'snort': {
-        #         'header': o_data['header'],
-        #         'signature': o_data['signature'],
-        #         'classification': o_data['classification'],
-        #         'priority': o_data['priority'],
-        #     },
-        #     'sensor': o_data['sensor'] # UUID
+        ip_id=dec.id,
+        ip_ttl=dec.ttl,
+        ip_len=dec.iplen,
+        ip_tos=dec.tos,
+        eth_src=dec.ethsrc,
+        eth_dst=dec.ethdst,
+        tcp_len=dec.tcplen,
+        tcp_flags=dec.tcpflags,
+        udp_len=dec.udplength,
+        **kwargs
     )
 
 
@@ -301,6 +332,12 @@ def suricata_events(identifier, payload):
         print 'exception processing suricata event'
         traceback.print_exc()
         return None
+
+    # extra suricata fields
+    kwargs = {}
+    for field in ['action', 'signature_id', 'signature_rev']:
+        kwargs['suricata_{}'.format(field)] = dec.get(field)
+
     return create_message(
         'suricata.events',
         identifier,
@@ -315,15 +352,15 @@ def suricata_events(identifier, payload):
         ids_type='network',
         severity='high',
         signature=dec.signature,
-
-        # TODO: add the suricata specific items:
-        # 'suricata': {
-        #         'action':         o_data['action'],
-        #         'signature':      o_data['signature'],
-        #         'signature_id':   o_data['signature_id'],
-        #         'signature_rev':  o_data['signature_rev'],
-        #     },
-        #     'sensor': o_data['sensor'] # UUID
+        ip_id=dec.ip_id,
+        ip_ttl=dec.ip_ttl,
+        ip_tos=dec.ip_tos,
+        eth_src=dec.eth_src,
+        eth_dst=dec.eth_dst,
+        tcp_len=dec.tcp_len,
+        tcp_flags=dec.tcp_flags,
+        udp_len=dec.udp_len,
+        **kwargs
     )
 
 
@@ -398,6 +435,7 @@ def wordpot_event(identifier, payload):
         ids_type='network',
         severity='high',
         signature='Wordpress Exploit, Scan, or Enumeration Attempted',
+        request_url=dec.url,
     )
 
 
@@ -439,6 +477,9 @@ def shockpot_event(identifier, payload):
         dest_ip = host
     except:
         dest_ip = None
+
+    if dec.url:
+        kwargs['request_url'] = dec.url
 
     return create_message(
         'shockpot.events',
@@ -492,6 +533,7 @@ def elastichoney_events(identifier, payload):
         elastichoney_form=dec.form,
         elastichoney_payload=dec.payload,
         user_agent=user_agent,
+        request_url=dec.url
     )
 
 PROCESSORS = {
