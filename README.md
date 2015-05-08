@@ -27,7 +27,7 @@ vi logger.json
 
 ```
 . env/bin/activate
-python logger.py logger.json
+./bin/hpfeeds-logger logger.json
 ```
 
 ## Notes
