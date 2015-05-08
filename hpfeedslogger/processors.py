@@ -9,6 +9,7 @@ import GeoIP
 
 IPV6_REGEX = re.compile(r'::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 
+
 def clean_ip(ip):
     mat = IPV6_REGEX.search(ip)
     if mat:
@@ -57,9 +58,10 @@ def geo_intel(maxmind_geo, maxmind_asn, ip, prefix=''):
         result = dict((prefix+name, value) for name, value in result.items())
     return result
 
+
 def create_message(event_type, identifier, src_ip, dst_ip,
-    src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None,
-    direction=None, ids_type=None, severity=None, signature=None, app=None, **kwargs):
+                   src_port=None, dst_port=None, transport='tcp', protocol='ip', vendor_product=None,
+                   direction=None, ids_type=None, severity=None, signature=None, app=None, **kwargs):
 
     msg = dict(kwargs)
     msg.update({
@@ -98,7 +100,7 @@ def glastopf_event(identifier, payload):
         if 'Host' in dec['request']['header'] and not dec['request']['url'].startswith('http'):
             request_url = 'http://' + dec['request']['header']['Host'] + dec['request']['url']
         else:
-            #best of luck!
+            # best of luck!
             request_url = dec['request']['url']
     except:
         print 'exception processing glastopf url, ignoring'
@@ -551,6 +553,7 @@ PROCESSORS = {
     'suricata.events': [suricata_events],
     'elastichoney.events': [elastichoney_events],
 }
+
 
 class HpfeedsMessageProcessor(object):
     def __init__(self, maxmind_geo_file=None, maxmind_asn_file=None):
