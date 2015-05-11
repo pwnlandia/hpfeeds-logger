@@ -10,6 +10,24 @@ import GeoIP
 IPV6_REGEX = re.compile(r'::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 
 
+def computeHashes(data, record):
+    m = hashlib.md5()
+    m.update(data)
+    record['md5'] = m.hexdigest()
+
+    m = hashlib.sha1()
+    m.update(data)
+    record['sha1'] = m.hexdigest()
+
+    m = hashlib.sha256()
+    m.update(data)
+    record['sha256'] = m.hexdigest()
+
+    m = hashlib.sha512()
+    m.update(data)
+    record['sha512'] = m.hexdigest()
+
+
 def clean_ip(ip):
     mat = IPV6_REGEX.search(ip)
     if mat:
@@ -451,21 +469,7 @@ def shockpot_event(identifier, payload):
 
     kwargs = {}
     if dec.command_data:
-        m = hashlib.md5()
-        m.update(dec.command_data)
-        kwargs['md5'] = m.hexdigest()
-
-        m = hashlib.sha1()
-        m.update(dec.command_data)
-        kwargs['sha1'] = m.hexdigest()
-
-        m = hashlib.sha256()
-        m.update(dec.command_data)
-        kwargs['sha256'] = m.hexdigest()
-
-        m = hashlib.sha512()
-        m.update(dec.command_data)
-        kwargs['sha512'] = m.hexdigest()
+        computeHashes(dec.command_data, kwargs)
 
     if dec.command:
         m = re.search('(?P<url>https?://[^\s;]+)', dec.command)
@@ -519,6 +523,16 @@ def elastichoney_events(identifier, payload):
     if dec.headers:
         user_agent = dec.headers.get('user_agent', '')
 
+    kwargs = {}
+    if dec.payloadBinary:
+        computeHashes(dec.payloadBinary.decode('base64'), kwargs)
+
+    if dec.payloadResource:
+        kwargs['url'] = dec.payloadResource
+
+        if dec.payloadCommand:
+            kwargs['command'] = '{} {}'.format(dec.payloadCommand, dec.payloadResource)
+
     return create_message(
         'elastichoney.events',
         identifier,
@@ -535,7 +549,8 @@ def elastichoney_events(identifier, payload):
         elastichoney_form=dec.form,
         elastichoney_payload=dec.payload,
         user_agent=user_agent,
-        request_url=dec.url
+        request_url=dec.url,
+        **kwargs
     )
 
 PROCESSORS = {
