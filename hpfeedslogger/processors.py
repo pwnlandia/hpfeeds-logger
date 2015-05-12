@@ -11,6 +11,7 @@ IPV6_REGEX = re.compile(r'::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 
 
 def computeHashes(data, record):
+    data = data.encode('utf-8')
     m = hashlib.md5()
     m.update(data)
     record['md5'] = m.hexdigest()
@@ -29,6 +30,8 @@ def computeHashes(data, record):
 
 
 def clean_ip(ip):
+    if not ip:
+        return ip
     mat = IPV6_REGEX.search(ip)
     if mat:
         return mat.group(1)
