@@ -322,7 +322,7 @@ def snort_alerts(identifier, payload):
     # extra snort fields
     kwargs = {}
     for field in ['header', 'classification', 'priority']:
-        kwargs['snort_{}'.format(field)] = dec.get(field)
+        kwargs['snort_{}'.format(field)] = dec[field]
 
     return create_message(
         'snort.alerts',
