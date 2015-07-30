@@ -5,13 +5,13 @@ import hpfeeds
 import sys
 import logging
 from logging.handlers import RotatingFileHandler
-from hpfeedslogger.formatters import splunk, arcsight, json as json_fmt
+from hpfeedslogger.formatters import splunk, arcsight, json_formatter
 from hpfeedslogger import processors
 
 FORMATTERS = {
     'splunk': splunk.format,
     'arcsight': arcsight.format,
-    'json': json_fmt.format,
+    'json': json_formatter.format,
 }
 
 handler = logging.StreamHandler()
