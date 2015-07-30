@@ -45,6 +45,9 @@ class ezdict(object):
     def __getattr__(self, name):
         return self.d.get(name, None)
 
+    def __getitem__(self, name):
+        return self.d.get(name, None)
+
 
 def geo_intel(maxmind_geo, maxmind_asn, ip, prefix=''):
     result = {
