@@ -14,6 +14,7 @@ def format(message):
         "vendor_product": "cs1",
         "ids_type": "cs2",
         "app": "cs3",
+        "request_url": "request",
     }
 
     severity_map = {
