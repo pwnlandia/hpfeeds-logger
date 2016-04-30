@@ -221,28 +221,37 @@ def beeswarm_hive(identifier, payload):
 
 
 def kippo_sessions(identifier, payload):
+    return kippo_cowrie_sessions(identifier, payload, 'Kippo', 'kippo.sessions')
+
+
+def cowrie_sessions(identifier, payload):
+    return kippo_cowrie_sessions(identifier, payload, 'Cowrie', 'cowrie.sessions')
+
+
+def kippo_cowrie_sessions(identifier, payload, name, channel):
+    name_lower = name.lower()
     try:
         dec = ezdict(json.loads(str(payload)))
     except:
-        print 'exception processing kippo event'
+        print 'exception processing {} event'.format(name_lower)
         traceback.print_exc()
         return
 
     messages = []
 
     base_message = create_message(
-        'kippo.sessions',
+        channel,
         identifier,
         src_ip=dec.peerIP,
         dst_ip=dec.hostIP,
         src_port=dec.peerPort,
         dst_port=dec.hostPort,
-        vendor_product='Kippo',
-        app='kippo',
+        vendor_product=name,
+        app=name_lower,
         direction='inbound',
         ids_type='network',
         severity='high',
-        signature='SSH session on kippo honeypot',
+        signature='SSH session on {} honeypot'.format(name_lower),
         ssh_version=dec.version
     )
 
@@ -251,7 +260,7 @@ def kippo_sessions(identifier, payload):
     if dec.credentials:
         for username, password in dec.credentials:
             msg = dict(base_message)
-            msg['signature'] = 'SSH login attempted on kippo honeypot'
+            msg['signature'] = 'SSH login attempted on {} honeypot'.format(name_lower)
             msg['ssh_username'] = username
             msg['ssh_password'] = password
             messages.append(msg)
@@ -259,21 +268,21 @@ def kippo_sessions(identifier, payload):
     if dec.urls:
         for url in dec.urls:
             msg = dict(base_message)
-            msg['signature'] = 'URL download attempted on kippo honeypot'
+            msg['signature'] = 'URL download attempted on {} honeypot'.format(name_lower)
             msg['url'] = url
             messages.append(msg)
 
     if dec.commands:
         for command in dec.commands:
             msg = dict(base_message)
-            msg['signature'] = 'command attempted on kippo honeypot'
+            msg['signature'] = 'command attempted on {} honeypot'.format(name_lower)
             msg['command'] = command
             messages.append(msg)
 
     if dec.unknownCommands:
         for command in dec.unknownCommands:
             msg = dict(base_message)
-            msg['signature'] = 'unknown command attempted on kippo honeypot'
+            msg['signature'] = 'unknown command attempted on {} honeypot'.format(name_lower)
             msg['command'] = command
             messages.append(msg)
 
@@ -566,6 +575,7 @@ PROCESSORS = {
     'dionaea.connections': [dionaea_connections],
     'beeswarm.hive': [beeswarm_hive],
     'kippo.sessions': [kippo_sessions],
+    'cowrie.sessions': [cowrie_sessions],
     'conpot.events': [conpot_events],
     'snort.alerts': [snort_alerts],
     'wordpot.events': [wordpot_event],
