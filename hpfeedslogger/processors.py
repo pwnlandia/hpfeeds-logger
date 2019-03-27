@@ -5,7 +5,7 @@ import urlparse
 import socket
 import hashlib
 import re
-import GeoIP
+import GeoIP2
 
 IPV6_REGEX = re.compile(r'::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 
@@ -68,16 +68,22 @@ def geo_intel(maxmind_geo, maxmind_asn, ip, prefix=''):
     }
 
     if maxmind_geo:
-        geo = maxmind_geo.record_by_addr(ip)
+        geo = maxmind_geo.city(ip)
         if geo:
-            if geo['city'] is not None:
-                geo['city'] = geo['city'].decode('latin1')
-            result.update(geo)
+            result['city'] = geo.city.name
+            result['region_name'] = geo.subdivisions.most_specific.name
+            result['region'] = geo.subdivisions.most_specific.iso_code
+            result['longitude'] = geo.location.longitude
+            result['lattitude'] = geo.location.lattitude
+            result['country_code3'] = geo.country.iso_code
+            result['postal_code'] = geo.postal.code
+            result['country_code'] = geo.country.iso_code
+            result['country_name'] = geo.country.name
 
     if maxmind_asn:
-        org = maxmind_asn.org_by_addr(ip)
+        org = maxmind_asn.asn(ip)
         if org:
-            result['org'] = org.decode('latin-1')
+            result['org'] = org.autonomous_system_organization
     if prefix:
         result = dict((prefix+name, value) for name, value in result.items())
     return result
@@ -592,9 +598,9 @@ class HpfeedsMessageProcessor(object):
         self.maxmind_asn = None
 
         if maxmind_geo_file:
-            self.maxmind_geo = GeoIP.open(maxmind_geo_file, GeoIP.GEOIP_STANDARD)
+            self.maxmind_geo = geoip2.database.Reader(maxmind_geo_file)
         if maxmind_asn_file:
-            self.maxmind_asn = GeoIP.open(maxmind_asn_file, GeoIP.GEOIP_STANDARD)
+            self.maxmind_asn = geoip2.database.Reader(maxmind_asn_file)
 
     def geo_intelligence_enrichment(self, messages):
         for message in messages:
