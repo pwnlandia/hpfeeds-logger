@@ -5,7 +5,7 @@ import urlparse
 import socket
 import hashlib
 import re
-import geoip2
+import geoip2.database
 
 IPV6_REGEX = re.compile(r'::ffff:(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})')
 
