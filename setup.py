@@ -45,7 +45,7 @@ setup(
     scripts=['bin/hpfeeds-logger'],
     install_requires=[
         'hpfeeds-threatstream==1.1',
-        'GeoIP==1.3.2'
+        'geoip2==2.9.0'
     ],
     tests_require=[],
     py_modules=['ez_setup'],
