@@ -152,6 +152,28 @@ def glastopf_event(identifier, payload):
         request_url=request_url,
     )
 
+def agave_event(identifier, payload):
+    try:
+        dec = ezdict(json.loads(str(payload)))
+    except:
+        print 'exception processing dionaea event'
+        traceback.print_exc()
+        return
+    return create_message(
+        'agave.events',
+        identifier,
+        protocol=dec.protocol
+        src_ip=dec.src_ip,
+        dst_ip=dec.dest_ip,
+        src_port=dec.src_port,
+        dst_port=dec.dest_port,
+        vendor_product='Agave',
+        app='agave',
+        direction='inbound',
+        signature=dec.signature,
+        url=dec.url,
+    )
+
 
 def dionaea_capture(identifier, payload):
     try:
@@ -589,6 +611,7 @@ PROCESSORS = {
     'p0f.events': [p0f_events],
     'suricata.events': [suricata_events],
     'elastichoney.events': [elastichoney_events],
+    'agave.events': [agave_event],
 }
 
 
