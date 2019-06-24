@@ -162,7 +162,7 @@ def agave_event(identifier, payload):
     return create_message(
         'agave.events',
         identifier,
-        protocol=dec.protocol
+        protocol=dec.protocol,
         src_ip=dec.src_ip,
         dst_ip=dec.dest_ip,
         src_port=dec.src_port,
