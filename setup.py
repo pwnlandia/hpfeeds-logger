@@ -28,7 +28,7 @@ long_description = """A library for consuming messages from hpfeeds honeypots an
 
 setup(
     name='hpfeeds-logger',
-    version='0.0.7.4',
+    version='0.0.7.6',
     author='Jason Trost',
     author_email='tech@threatstream.com',
     maintainer='Anomali, Inc.',
