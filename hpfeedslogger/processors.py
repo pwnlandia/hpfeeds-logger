@@ -160,8 +160,6 @@ def agave_event(identifier, payload):
         traceback.print_exc()
         return
 
-    messages = []
-
     base_message = create_message(
         'agave.events',
         identifier,
@@ -172,20 +170,25 @@ def agave_event(identifier, payload):
         dst_port=dec.dest_port,
         vendor_product='Agave',
         app='agave',
-        direction='inbound',
         signature=dec.signature,
-        url=dec.url,
         agave_app=dec.agave_app
     )
 
-    messages.append(base_message)
+    # if this is a login attempt, make sure we log creds
     if dec.agave_username:
-        msg = dict(base_message)
-        msg['agave_username'] = dec.agave_username
+        base_message['agave_username'] = dec.agave_username
     if dec.agave_password:
-        msg = dict(base_message)
-        msg['agave_password'] = dec.agave_password
+        base_message['agave_password'] = dec.agave_password
 
+    # non login request will give what the HTTP request json is
+    if dec.request_json:
+        base_message['request_json'] = dec.request_json
+
+    # was this IP previously seen scanning us?
+    if dec.prev_seen:
+        base_message['prev_seen'] = dec.prev_seen
+
+    return base_message
 
 def dionaea_capture(identifier, payload):
     try:
