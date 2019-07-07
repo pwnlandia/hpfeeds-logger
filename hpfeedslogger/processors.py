@@ -159,7 +159,10 @@ def agave_event(identifier, payload):
         print 'exception processing dionaea event'
         traceback.print_exc()
         return
-    return create_message(
+
+    messages = []
+
+    base_message = create_message(
         'agave.events',
         identifier,
         protocol=dec.protocol,
@@ -172,7 +175,16 @@ def agave_event(identifier, payload):
         direction='inbound',
         signature=dec.signature,
         url=dec.url,
+        agave_app=dec.agave_app
     )
+
+    messages.append(base_message)
+    if dec.agave_username:
+        msg = dict(base_message)
+        msg['agave_username'] = dec.agave_username
+    if dec.agave_password:
+        msg = dict(base_message)
+        msg['agave_password'] = dec.agave_password
 
 
 def dionaea_capture(identifier, payload):
