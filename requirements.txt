@@ -1,2 +1,2 @@
--e git+https://github.com/threatstream/hpfeeds/#egg=hpfeeds-dev
+-e git+https://github.com/Pwnlandia/hpfeeds/#egg=hpfeeds-dev
 geoip2
